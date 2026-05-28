@@ -1,0 +1,144 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}我的博客{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">📝 我的博客</a>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">首页</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('create') }}">写文章</a>
+                    <a href="{{ url_for('profile') }}">我的主页</a>
+                    <a href="{{ url_for('logout') }}" onclick="return confirm('确定要登出吗？')">登出</a>
+                    <span style="color: #667eea;">欢迎，{{ current_user.username }}</span>
+                {% else %}
+                    <a href="{{ url_for('login') }}">登录</a>
+                    <a href="{{ url_for('register') }}">注册</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 我的博客系统 | Powered by Flask | 用 ❤️ 构建</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/xml.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            hljs.highlightAll();
+
+            document.querySelectorAll('table').forEach(function(table) {
+                if (!table.parentElement.classList.contains('table-wrapper')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'table-wrapper';
+                    table.parentNode.insertBefore(wrapper, table);
+                    wrapper.appendChild(table);
+                }
+            });
+
+            addCopyButtonsToCodeBlocks();
+            addLanguageLabels();
+        });
+
+        function addCopyButtonsToCodeBlocks() {
+            const codeBlocks = document.querySelectorAll('pre');
+            codeBlocks.forEach(function(pre) {
+                if (pre.parentElement.classList.contains('code-block-wrapper')) {
+                    return;
+                }
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-btn';
+                copyButton.innerHTML = '📋 复制';
+                copyButton.addEventListener('click', async function() {
+                    const code = pre.querySelector('code');
+                    const codeText = code ? code.innerText : pre.innerText;
+                    try {
+                        await navigator.clipboard.writeText(codeText);
+                        copyButton.innerHTML = '✅ 已复制！';
+                        copyButton.style.backgroundColor = '#28a745';
+                        setTimeout(function() {
+                            copyButton.innerHTML = '📋 复制';
+                            copyButton.style.backgroundColor = '';
+                        }, 2000);
+                    } catch (err) {
+                        copyButton.innerHTML = '❌ 失败';
+                        setTimeout(function() {
+                            copyButton.innerHTML = '📋 复制';
+                        }, 2000);
+                    }
+                });
+                wrapper.appendChild(copyButton);
+            });
+        }
+
+        function addLanguageLabels() {
+            const codeBlocks = document.querySelectorAll('pre code');
+            codeBlocks.forEach(function(codeBlock) {
+                const classList = codeBlock.className;
+                const languageMatch = classList.match(/language-(\w+)/);
+                if (languageMatch) {
+                    const languageNames = {
+                        'python': 'Python', 'javascript': 'JavaScript', 'html': 'HTML',
+                        'css': 'CSS', 'sql': 'SQL', 'bash': 'Bash', 'json': 'JSON'
+                    };
+                    const displayName = languageNames[languageMatch[1]] || languageMatch[1].toUpperCase();
+                    const pre = codeBlock.parentElement;
+                    const wrapper = pre.parentElement;
+                    if (wrapper && wrapper.classList.contains('code-block-wrapper') && !wrapper.querySelector('.code-language-label')) {
+                        const langLabel = document.createElement('div');
+                        langLabel.className = 'code-language-label';
+                        langLabel.textContent = displayName;
+                        wrapper.appendChild(langLabel);
+                    }
+                }
+            });
+        }
+
+        window.refreshCodeBlocks = function() {
+            hljs.highlightAll();
+            addCopyButtonsToCodeBlocks();
+            addLanguageLabels();
+        };
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

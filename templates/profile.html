@@ -1,0 +1,44 @@
+<!-- templates/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}的个人主页{% endblock %}
+
+{% block content %}
+<div class="profile-header" style="background: white; border-radius: 10px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h1>{{ user.username }} 的主页</h1>
+    <p>📧 {{ user.email }}</p>
+    <p>📅 注册于 {{ user.created_at.strftime('%Y年%m月%d日') }}</p>
+    <p>📝 共发表了 {{ user.posts|length }} 篇文章</p>
+</div>
+
+<h2 style="color: white; margin-bottom: 1rem;">我的文章</h2>
+
+{% if posts %}
+    {% for post in posts %}
+        <div class="post-card">
+            <div class="card-header">
+                <h2 class="post-title">
+                    <a href="{{ url_for('detail', id=post.id) }}">{{ post.title }}</a>
+                </h2>
+                <div class="post-meta">
+                    <span>📅 {{ post.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="post-excerpt">
+                    {{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('detail', id=post.id) }}" class="btn btn-primary">阅读全文 →</a>
+                <a href="{{ url_for('edit', id=post.id) }}" class="btn btn-success">编辑</a>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <p>你还没有发表过文章</p>
+        <a href="{{ url_for('create') }}" class="btn btn-primary">写第一篇文章</a>
+    </div>
+{% endif %}
+{% endblock %}

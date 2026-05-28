@@ -1,0 +1,47 @@
+<!-- templates/create.html -->
+{% extends "base.html" %}
+
+{% block title %}发布新文章{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>📝 发布新文章</h1>
+        <p style="color: #666; margin-top: 0.5rem;">分享你的想法和见解</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('create') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control", placeholder="输入一个吸引人的标题...") }}
+                {% if form.title.errors %}
+                    <div class="error-message">
+                        {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.content.label(class="form-label") }}
+                {{ form.content(class="form-control", rows=12, placeholder="在这里写下你的精彩内容...") }}
+                {% if form.content.errors %}
+                    <div class="error-message">
+                        {% for error in form.content.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="display: flex; gap: 1rem;">
+                {{ form.submit(class="btn btn-primary", value="发布文章") }}
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
