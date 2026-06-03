@@ -1,0 +1,30 @@
+<!-- templates/likers.html -->
+{% extends "base.html" %}
+
+{% block title %}点赞者 - {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>👍 点赞者列表</h1>
+        <p>文章：《{{ post.title }}》共获得 {{ post.likes_count }} 个点赞</p>
+    </div>
+    <div class="card-body">
+        {% if likers %}
+            <ul style="list-style: none;">
+                {% for liker in likers %}
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                        <strong>{{ liker.username }}</strong>
+                        <span style="color: #666; font-size: 0.9rem; float: right;">{{ liker.time.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="text-align: center; color: #666;">还没有人点赞</p>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="{{ url_for('detail', id=post.id) }}" class="btn btn-secondary">← 返回文章</a>
+    </div>
+</div>
+{% endblock %}

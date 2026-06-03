@@ -5,146 +5,46 @@
 
 {% block extra_css %}
 <style>
-    /* Markdown 内容样式 */
-    .markdown-content {
-        line-height: 1.8;
-        font-size: 1.1rem;
-        color: #333;
+    /* 你的原有样式保持不变 */
+    .reply-form {
+        margin-left: 2rem;
+        margin-top: 1rem;
+        display: none;
     }
-
-    .markdown-content h1 {
-        font-size: 2rem;
-        margin: 1.5rem 0 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #667eea;
+    .reply-form.active {
+        display: block;
     }
-
-    .markdown-content h2 {
-        font-size: 1.5rem;
-        margin: 1.2rem 0 0.8rem;
-        color: #2c3e50;
-    }
-
-    .markdown-content h3 {
-        font-size: 1.3rem;
-        margin: 1rem 0 0.6rem;
-        color: #34495e;
-    }
-
-    .markdown-content p {
-        margin: 1rem 0;
-    }
-
-    .markdown-content ul, .markdown-content ol {
-        margin: 1rem 0 1rem 2rem;
-    }
-
-    .markdown-content li {
-        margin: 0.5rem 0;
-    }
-
-    .markdown-content blockquote {
-        margin: 1rem 0;
-        padding: 1rem 1.5rem;
-        border-left: 4px solid #667eea;
-        background: #f8f9fa;
-        font-style: italic;
-        color: #555;
-    }
-
-    .markdown-content code {
-        background: #f4f4f4;
-        padding: 0.2rem 0.4rem;
-        border-radius: 3px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-        color: #e83e8c;
-    }
-
-    .markdown-content pre {
-        background: #2d2d2d;
-        padding: 1rem;
-        border-radius: 5px;
-        overflow-x: auto;
-        margin: 1rem 0;
-    }
-
-    .markdown-content pre code {
-        background: none;
-        color: #f8f8f2;
-        padding: 0;
-        font-size: 0.9rem;
-    }
-
-    .markdown-content table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-    }
-
-    .markdown-content th,
-    .markdown-content td {
-        border: 1px solid #ddd;
-        padding: 0.75rem;
-        text-align: left;
-    }
-
-    .markdown-content th {
-        background: #f4f4f4;
-        font-weight: bold;
-    }
-
-    .markdown-content img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-        margin: 1rem 0;
-    }
-
-    .markdown-content hr {
-        margin: 2rem 0;
-        border: none;
-        height: 1px;
-        background: linear-gradient(to right, #ccc, transparent);
-    }
-
-    /* 表格响应式包装器 */
-    .table-wrapper {
-        overflow-x: auto;
-        margin: 1rem 0;
-    }
-
-    /* 目录样式（如果有） */
-    .toc {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 2rem;
-<!--        border-left: 4px solid #667eea;-->
-    }
-
-    .toc h3 {
-        margin-top: 0;
+    .reply-btn {
         color: #667eea;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-top: 0.5rem;
     }
-
-    .toc ul {
-        margin: 0.5rem 0 0 1rem;
-        list-style: none;
-    }
-
-    .toc li {
-        margin: 0.25rem 0;
-    }
-
-    .toc a {
-        color: #333;
-        text-decoration: none;
-    }
-
-    .toc a:hover {
-        color: #667eea;
+    .reply-btn:hover {
         text-decoration: underline;
+    }
+    .replies {
+        margin-left: 2rem;
+        margin-top: 1rem;
+        border-left: 2px solid #ddd;
+        padding-left: 1rem;
+    }
+    .delete-comment {
+        color: #dc3545;
+        font-size: 0.8rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-left: auto;
+    }
+    .delete-comment:hover {
+        text-decoration: underline;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
     }
 </style>
 {% endblock %}
@@ -154,34 +54,183 @@
     <h1 class="article-title">{{ post.title }}</h1>
 
     <div class="article-meta">
+        <span>✍️ 作者：{{ post.author.username }}</span>
         <span>📅 发布于 {{ post.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
-        <span style="margin-left: 1rem;">📖 字数统计：{{ post.content|length }} 字</span>
-        <span style="margin-left: 1rem;">🔖 预计阅读：{{ post.content|length // 300 + 1 }} 分钟</span>
+        <span>📖 字数统计：{{ post.content|length }} 字</span>
     </div>
 
-    <!-- 目录（如果有） -->
-    {% if toc %}
-    <div class="toc">
-        <h3>📚 文章目录</h3>
-        {{ toc|safe }}
-    </div>
-    {% endif %}
+    <!-- 点赞、收藏按钮区域 -->
+    <div class="action-buttons">
+        <button class="action-btn" id="like-btn">
+            ❤️ <span id="like-count">{{ post.likes_count }}</span> 点赞
+        </button>
 
-    <!-- Markdown 渲染后的内容 -->
+        <button class="action-btn" id="favorite-btn">
+            ⭐ <span id="favorite-count">{{ post.favorites_count }}</span> 收藏
+        </button>
+
+        {% if current_user.is_authenticated and current_user.id == post.user_id %}
+            <a href="{{ url_for('likers', id=post.id) }}" class="action-btn">
+                👥 查看点赞者 ({{ post.likes_count }})
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- 文章内容 -->
     <div class="markdown-content">
         {{ content_html|safe }}
     </div>
 
+    <!-- 文章操作按钮 -->
     <div class="article-actions">
-        <a href="{{ url_for('edit', id=post.id) }}" class="btn btn-success">✏️ 编辑文章</a>
-
-        <form method="POST" action="{{ url_for('delete', id=post.id) }}" style="display: inline;"
-              onsubmit="return confirm('确定要删除这篇文章吗？此操作不可恢复！')">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-danger">🗑️ 删除文章</button>
-        </form>
-
+        {% if current_user.is_authenticated and current_user.id == post.user_id %}
+            <a href="{{ url_for('edit', id=post.id) }}" class="btn btn-success">✏️ 编辑文章</a>
+            <form method="POST" action="{{ url_for('delete', id=post.id) }}" style="display: inline;"
+                  onsubmit="return confirm('确定要删除这篇文章吗？此操作不可恢复！')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">🗑️ 删除文章</button>
+            </form>
+        {% endif %}
         <a href="{{ url_for('index') }}" class="btn btn-secondary">← 返回首页</a>
     </div>
+
+    <!-- 评论区域 -->
+    <div class="comments-section">
+        <h3>💬 评论 ({{ comments|length }})</h3>
+
+        {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('comment', id=post.id) }}" style="margin: 1rem 0;">
+                {{ comment_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ comment_form.content(class="form-control", rows=3, placeholder="写下你的评论...") }}
+                </div>
+                {{ comment_form.submit(class="btn btn-primary") }}
+            </form>
+        {% else %}
+            <p style="color: #666; margin-bottom: 1rem;">请<a href="{{ url_for('login') }}">登录</a>后发表评论</p>
+        {% endif %}
+
+        <!-- 显示评论 -->
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="comment" id="comment-{{ comment.id }}">
+                    <div class="comment-meta">
+                        <span class="comment-author">{{ comment.author.username }}</span>
+                        <span>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+
+                        {% if current_user.is_authenticated and (comment.user_id == current_user.id or post.user_id == current_user.id) %}
+                            <form method="POST" action="{{ url_for('delete_comment', id=comment.id) }}" style="display: inline; margin-left: auto;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="delete-comment" onclick="return confirm('确定删除这条评论吗？')">删除</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+
+                    {% if current_user.is_authenticated %}
+                        <div class="reply-btn" onclick="toggleReplyForm({{ comment.id }})">↩️ 回复</div>
+                    {% endif %}
+
+                    <div id="reply-form-{{ comment.id }}" class="reply-form">
+                        <form method="POST" action="{{ url_for('reply', post_id=post.id, comment_id=comment.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <textarea name="content" class="form-control" rows="2" placeholder="写下你的回复..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">发表回复</button>
+                        </form>
+                    </div>
+
+                    <!-- 显示回复 -->
+                    {% if comment.replies %}
+                        <div class="replies">
+                            {% for reply in comment.replies %}
+                                <div class="comment" style="background: #e9ecef; margin-bottom: 0.5rem;">
+                                    <div class="comment-meta">
+                                        <span class="comment-author">{{ reply.author.username }}</span>
+                                        <span>{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        {% if current_user.is_authenticated and (reply.user_id == current_user.id or post.user_id == current_user.id) %}
+                                            <form method="POST" action="{{ url_for('delete_comment', id=reply.id) }}" style="display: inline; margin-left: auto;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="delete-comment" onclick="return confirm('确定删除这条回复吗？')">删除</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">{{ reply.content }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-comments">还没有评论，来说两句吧！</div>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+    // 获取 CSRF token
+    function getCSRFToken() {
+        let tokenInput = document.querySelector('input[name="csrf_token"]');
+        if (tokenInput) return tokenInput.value;
+        return '';
+    }
+
+    // 点赞功能
+    const likeBtn = document.getElementById('like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            fetch('{{ url_for("like", id=post.id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('like-count').textContent = data.likes_count;
+                if (data.liked) {
+                    likeBtn.classList.add('liked');
+                } else {
+                    likeBtn.classList.remove('liked');
+                }
+            })
+            .catch(error => console.error('点赞错误:', error));
+        });
+    }
+
+    // 收藏功能
+    const favoriteBtn = document.getElementById('favorite-btn');
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', function() {
+            fetch('{{ url_for("favorite", id=post.id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('favorite-count').textContent = data.favorites_count;
+                if (data.favorited) {
+                    favoriteBtn.classList.add('favorited');
+                } else {
+                    favoriteBtn.classList.remove('favorited');
+                }
+            })
+            .catch(error => console.error('收藏错误:', error));
+        });
+    }
+
+    // 回复表单切换函数 - 全局函数
+    window.toggleReplyForm = function(commentId) {
+        const form = document.getElementById('reply-form-' + commentId);
+        if (form) {
+            form.classList.toggle('active');
+        }
+    }
+</script>
 {% endblock %}

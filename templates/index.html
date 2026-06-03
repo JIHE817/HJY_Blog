@@ -15,8 +15,10 @@
                         <a href="{{ url_for('detail', id=post.id) }}">{{ post.title }}</a>
                     </h2>
                     <div class="post-meta">
-                        <span>✍️ 作者：{{ post.author.username }}</span>
+                        <span>✍️ 作者：{{ post.author.username if post.author else '未知用户' }}</span>
                         <span>📅 {{ post.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+                        <span>❤️ {{ post.likes_count }} 点赞</span>
+                        <span>⭐ {{ post.favorites_count }} 收藏</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -26,14 +28,22 @@
                 </div>
                 <div class="card-footer">
                     <a href="{{ url_for('detail', id=post.id) }}" class="btn btn-primary">阅读全文 →</a>
+
+                    {% if current_user.is_authenticated and current_user.id == post.user_id %}
+                        <a href="{{ url_for('edit', id=post.id) }}" class="btn btn-success" style="margin-left: 0.5rem;">编辑</a>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
     {% else %}
         <div class="card" style="text-align: center; padding: 3rem;">
-            <h2>还没有文章</h2>
-            <p style="margin: 1rem 0;">成为第一个发布博客的人吧！</p>
-            <a href="{{ url_for('create') }}" class="btn btn-primary">📝 写第一篇文章</a>
+            <h2>📝 还没有文章</h2>
+            <p style="margin: 1rem 0; color: #666;">成为第一个发布博客的人吧！</p>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('create') }}" class="btn btn-primary">📝 写第一篇文章</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary">🔐 登录后开始写作</a>
+            {% endif %}
         </div>
     {% endif %}
 </div>

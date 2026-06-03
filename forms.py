@@ -95,3 +95,31 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('记住我')
 
     submit = SubmitField('登录')
+
+
+# ========== 以下是新增的三个表单类 ==========
+
+class CommentForm(FlaskForm):
+    """评论表单"""
+    content = TextAreaField(
+        '评论内容',
+        validators=[DataRequired(message='评论内容不能为空')],
+        render_kw={'placeholder': '写下你的评论...', 'rows': 3}
+    )
+    submit = SubmitField('发表评论')
+
+
+class ReplyForm(FlaskForm):
+    """回复表单"""
+    content = TextAreaField(
+        '回复内容',
+        validators=[DataRequired(message='回复内容不能为空')],
+        render_kw={'placeholder': '写下你的回复...', 'rows': 2}
+    )
+    submit = SubmitField('回复')
+
+
+class PrivacySettingForm(FlaskForm):
+    """隐私设置表单"""
+    favorites_private = BooleanField('收藏夹仅自己可见')
+    submit = SubmitField('保存设置')
