@@ -47,7 +47,7 @@ def utc_to_local(utc_time):
     if utc_time is None:
         return ''
     # UTC 时间 + 8 小时 = 北京时间
-    local_time = utc_time + timedelta(hours=0)
+    local_time = utc_time + timedelta(hours=8)
     return local_time
 
 
